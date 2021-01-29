@@ -1,10 +1,8 @@
-#####
-
 #df live data to update historical
 import cryptocompare
 import pandas as pd
 import os
-pd.set_option('display.max_rows', 500)
+pd.set_option('display.max_rows', None)
 pd.set_option('display.max_columns', 500)
 pd.set_option('display.width', 1000)
 import numpy as np
@@ -38,7 +36,7 @@ df2a = df2[['currency', 'time', 'price_USD']]
 
 #convert price ada
 df3a = pd.merge(df3, df1a, on='time', how='left')
-df3a['price1'] = df3a['close'] * df3a['price_USD']
+df3a['price1'] = df3a['close']
 df3b = df3a[['currency_x', 'time', 'price1']]
 
 #align ada columns
@@ -62,7 +60,7 @@ df_live_btc = df_live.loc[(df_live['currency'] == 'btc')]
 df_live_eth = df_live.loc[(df_live['currency'] == 'eth')]
 df_live_ada = df_live.loc[(df_live['currency'] == 'ada')]
 
-######
+
 
 
 #df historical data txt files cleaned up and framed
@@ -159,162 +157,181 @@ df_historical_ada = df_historical_ada.rename(columns={0: 'currency', 1: 'datetim
 df_historical_ada = df_historical_ada.drop_duplicates(subset=df_historical_ada.columns.difference(['key']))
 df_historical_ada = df_historical_ada.sort_values(by='timestamp_UTC')
 
-long_ema = 26
-short_ema = 12
-signal = 9
+for x in range(624, 628):
+    long_ema = x
+    for y in range(263, 266):
+        short_ema = y
+        for s in range(216, 218):
+            signal = s
 
-df_historical_btc['long ema'] = df_historical_btc['price_USD'].ewm(span=long_ema,min_periods=0,adjust=False,ignore_na=False).mean()
-df_historical_btc['short ema'] = df_historical_btc['price_USD'].ewm(span=short_ema,min_periods=0,adjust=False,ignore_na=False).mean()
-df_historical_btc['MACD'] = (df_historical_btc['short ema'] - df_historical_btc['long ema'])
-df_historical_btc['signal'] = df_historical_btc['MACD'].ewm(span=signal,min_periods=0,adjust=False,ignore_na=False).mean()
-df_historical_btc['buy'] = (df_historical_btc['MACD'].shift(1) < df_historical_btc['signal'].shift(1)) & (df_historical_btc['MACD'] >= df_historical_btc['signal'])
-df_historical_btc['sell'] = (df_historical_btc['MACD'].shift(1) > df_historical_btc['signal'].shift(1)) & (df_historical_btc['MACD'] <= df_historical_btc['signal'])
+            try:
 
-df_historical_btc = df_historical_btc.tail((len(df_historical_btc.index)) - long_ema)
+                df_historical_btc['long ema'] = df_historical_btc['price_USD'].ewm(span=long_ema,min_periods=0,adjust=False,ignore_na=False).mean()
+                df_historical_btc['short ema'] = df_historical_btc['price_USD'].ewm(span=short_ema,min_periods=0,adjust=False,ignore_na=False).mean()
+                df_historical_btc['MACD'] = (df_historical_btc['short ema'] - df_historical_btc['long ema'])
+                df_historical_btc['signal'] = df_historical_btc['MACD'].ewm(span=signal,min_periods=0,adjust=False,ignore_na=False).mean()
+                df_historical_btc['buy'] = (df_historical_btc['MACD'].shift(1) < df_historical_btc['signal'].shift(1)) & (df_historical_btc['MACD'] >= df_historical_btc['signal'])
+                df_historical_btc['sell'] = (df_historical_btc['MACD'].shift(1) > df_historical_btc['signal'].shift(1)) & (df_historical_btc['MACD'] <= df_historical_btc['signal'])
 
-df_crossover_btc = df_historical_btc.loc[(df_historical_btc['buy'] == True) | (df_historical_btc['sell'] == True)]
+                df_historical_btc = df_historical_btc.tail((len(df_historical_btc.index)) - long_ema)
 
-df_crossover_btc = df_crossover_btc.sort_values(by='timestamp_UTC')
+                df_crossover_btc = df_historical_btc.loc[(df_historical_btc['buy'] == True) | (df_historical_btc['sell'] == True)]
 
-df_crossover_btc_row1 = df_crossover_btc.head(1)
-df_crossover_btc_row1 = df_crossover_btc_row1[(df_crossover_btc_row1['buy'] == True)]
-df_crossover_btc_row2 = df_crossover_btc.tail(1)
-df_crossover_btc_row2 = df_crossover_btc_row2[(df_crossover_btc_row2['sell'] == True)]
-df_crossover_btc_analysis = df_crossover_btc
-df_crossover_btc_analysis = df_crossover_btc_analysis.drop(df_crossover_btc_analysis.index[0])
-df_crossover_btc_analysis = df_crossover_btc_analysis.drop(df_crossover_btc_analysis.index[-1])
-df_crossover_btc_analysis = pd.concat([df_crossover_btc_row1, df_crossover_btc_row2, df_crossover_btc_analysis])
-df_crossover_btc_analysis = df_crossover_btc_analysis.sort_values(by='timestamp_UTC')
+                df_crossover_btc = df_crossover_btc.sort_values(by='timestamp_UTC')
 
-df_crossover_btc_analysis['long_ema_var'] = long_ema
-df_crossover_btc_analysis['short_ema_var'] = short_ema
-df_crossover_btc_analysis['signal_var'] = signal
+                df_crossover_btc_row1 = df_crossover_btc.head(1)
+                df_crossover_btc_row1 = df_crossover_btc_row1[(df_crossover_btc_row1['buy'] == True)]
+                df_crossover_btc_row2 = df_crossover_btc.tail(1)
+                df_crossover_btc_row2 = df_crossover_btc_row2[(df_crossover_btc_row2['sell'] == True)]
+                df_crossover_btc_analysis = df_crossover_btc
+                df_crossover_btc_analysis = df_crossover_btc_analysis.drop(df_crossover_btc_analysis.index[0])
+                df_crossover_btc_analysis = df_crossover_btc_analysis.drop(df_crossover_btc_analysis.index[-1])
+                df_crossover_btc_analysis = pd.concat([df_crossover_btc_row1, df_crossover_btc_row2, df_crossover_btc_analysis])
+                df_crossover_btc_analysis = df_crossover_btc_analysis.sort_values(by='timestamp_UTC')
 
-df_crossover_btc_analysis['analysis_key'] = df_crossover_btc_analysis['long_ema_var'].map(str) + '-' + df_crossover_btc_analysis['short_ema_var'].map(str) + '-' + df_crossover_btc_analysis['signal_var'].map(str) + df_crossover_btc_analysis['currency']
+                df_crossover_btc_analysis['long_ema_var'] = long_ema
+                df_crossover_btc_analysis['short_ema_var'] = short_ema
+                df_crossover_btc_analysis['signal_var'] = signal
 
-df_crossover_btc_analysis_buy = df_crossover_btc_analysis.loc[(df_crossover_btc_analysis['buy'] == True)]
+                df_crossover_btc_analysis['analysis_key'] = df_crossover_btc_analysis['long_ema_var'].map(str) + '-' + df_crossover_btc_analysis['short_ema_var'].map(str) + '-' + df_crossover_btc_analysis['signal_var'].map(str) + df_crossover_btc_analysis['currency']
 
-df_crossover_btc_analysis_buy['buy_sell_key'] = np.arange(len(df_crossover_btc_analysis_buy))
+                df_crossover_btc_analysis_buy = df_crossover_btc_analysis.loc[(df_crossover_btc_analysis['buy'] == True)]
 
-df_crossover_btc_analysis_sell = df_crossover_btc_analysis.loc[(df_crossover_btc_analysis['sell'] == True)]
+                df_crossover_btc_analysis_buy['buy_sell_key'] = np.arange(len(df_crossover_btc_analysis_buy))
 
-df_crossover_btc_analysis_sell['buy_sell_key'] = np.arange(len(df_crossover_btc_analysis_sell))
+                df_crossover_btc_analysis_sell = df_crossover_btc_analysis.loc[(df_crossover_btc_analysis['sell'] == True)]
 
-df_crossover_btc_analysis_buy_and_sell = df_crossover_btc_analysis
+                df_crossover_btc_analysis_sell['buy_sell_key'] = np.arange(len(df_crossover_btc_analysis_sell))
 
-df_crossover_btc_analysis_data = pd.merge(df_crossover_btc_analysis_buy, df_crossover_btc_analysis_sell, on='buy_sell_key', how='left')
+                df_crossover_btc_analysis_buy_and_sell = df_crossover_btc_analysis
 
-df_crossover_btc_analysis = df_crossover_btc_analysis_data[['currency_x', 'datetime_UTC_x', 'timestamp_UTC_x', 'price_USD_x', 'key_x', 'analysis_key_x', 'datetime_UTC_y', 'timestamp_UTC_y', 'price_USD_y', 'key_y']]
+                df_crossover_btc_analysis_data = pd.merge(df_crossover_btc_analysis_buy, df_crossover_btc_analysis_sell, on='buy_sell_key', how='left')
 
-df_crossover_btc_analysis = df_crossover_btc_analysis.rename(columns = {'currency_x':'currency', 'datetime_UTC_x':'datetime_UTC_buy', 'timestamp_UTC_x':'timestamp_UTC_buy', 'price_USD_x':'price_USD_buy', 'key_x':'data_key_buy', 'analysis_key_x': 'analysis_key', 'datetime_UTC_y':'datetime_UTC_sell', 'timestamp_UTC_y':'timestamp_UTC_sell', 'price_USD_y':'price_USD_sell', 'key_y':'data_key_sell'})
+                df_crossover_btc_analysis = df_crossover_btc_analysis_data[['currency_x', 'datetime_UTC_x', 'timestamp_UTC_x', 'price_USD_x', 'key_x', 'analysis_key_x', 'datetime_UTC_y', 'timestamp_UTC_y', 'price_USD_y', 'key_y']]
 
-df_crossover_btc_analysis['profit'] = df_crossover_btc_analysis['price_USD_sell'] - df_crossover_btc_analysis['price_USD_buy']
+                df_crossover_btc_analysis = df_crossover_btc_analysis.rename(columns = {'currency_x':'currency', 'datetime_UTC_x':'datetime_UTC_buy', 'timestamp_UTC_x':'timestamp_UTC_buy', 'price_USD_x':'price_USD_buy', 'key_x':'data_key_buy', 'analysis_key_x': 'analysis_key', 'datetime_UTC_y':'datetime_UTC_sell', 'timestamp_UTC_y':'timestamp_UTC_sell', 'price_USD_y':'price_USD_sell', 'key_y':'data_key_sell'})
 
-##### buy sell
+                df_crossover_btc_analysis['profit'] = df_crossover_btc_analysis['price_USD_sell'] - df_crossover_btc_analysis['price_USD_buy']
 
-df_historical_eth['long ema'] = df_historical_eth['price_USD'].ewm(span=long_ema,min_periods=0,adjust=False,ignore_na=False).mean()
-df_historical_eth['short ema'] = df_historical_eth['price_USD'].ewm(span=short_ema,min_periods=0,adjust=False,ignore_na=False).mean()
-df_historical_eth['MACD'] = (df_historical_eth['short ema'] - df_historical_eth['long ema'])
-df_historical_eth['signal'] = df_historical_eth['MACD'].ewm(span=signal,min_periods=0,adjust=False,ignore_na=False).mean()
-df_historical_eth['buy'] = (df_historical_eth['MACD'].shift(1) < df_historical_eth['signal'].shift(1)) & (df_historical_eth['MACD'] >= df_historical_eth['signal'])
-df_historical_eth['sell'] = (df_historical_eth['MACD'].shift(1) > df_historical_eth['signal'].shift(1)) & (df_historical_eth['MACD'] <= df_historical_eth['signal'])
+                ##### buy sell
+                """
 
-df_historical_eth = df_historical_eth.tail((len(df_historical_eth.index)) - long_ema)
+                df_historical_eth['long ema'] = df_historical_eth['price_USD'].ewm(span=long_ema,min_periods=0,adjust=False,ignore_na=False).mean()
+                df_historical_eth['short ema'] = df_historical_eth['price_USD'].ewm(span=short_ema,min_periods=0,adjust=False,ignore_na=False).mean()
+                df_historical_eth['MACD'] = (df_historical_eth['short ema'] - df_historical_eth['long ema'])
+                df_historical_eth['signal'] = df_historical_eth['MACD'].ewm(span=signal,min_periods=0,adjust=False,ignore_na=False).mean()
+                df_historical_eth['buy'] = (df_historical_eth['MACD'].shift(1) < df_historical_eth['signal'].shift(1)) & (df_historical_eth['MACD'] >= df_historical_eth['signal'])
+                df_historical_eth['sell'] = (df_historical_eth['MACD'].shift(1) > df_historical_eth['signal'].shift(1)) & (df_historical_eth['MACD'] <= df_historical_eth['signal'])
 
-df_crossover_eth = df_historical_eth.loc[(df_historical_eth['buy'] == True) | (df_historical_eth['sell'] == True)]
+                df_historical_eth = df_historical_eth.tail((len(df_historical_eth.index)) - long_ema)
 
-df_crossover_eth = df_crossover_eth.sort_values(by='timestamp_UTC')
+                df_crossover_eth = df_historical_eth.loc[(df_historical_eth['buy'] == True) | (df_historical_eth['sell'] == True)]
 
-df_crossover_eth_row1 = df_crossover_eth.head(1)
-df_crossover_eth_row1 = df_crossover_eth_row1[(df_crossover_eth_row1['buy'] == True)]
-df_crossover_eth_row2 = df_crossover_eth.tail(1)
-df_crossover_eth_row2 = df_crossover_eth_row2[(df_crossover_eth_row2['sell'] == True)]
-df_crossover_eth_analysis = df_crossover_eth
-df_crossover_eth_analysis = df_crossover_eth_analysis.drop(df_crossover_eth_analysis.index[0])
-df_crossover_eth_analysis = df_crossover_eth_analysis.drop(df_crossover_eth_analysis.index[-1])
-df_crossover_eth_analysis = pd.concat([df_crossover_eth_row1, df_crossover_eth_row2, df_crossover_eth_analysis])
-df_crossover_eth_analysis = df_crossover_eth_analysis.sort_values(by='timestamp_UTC')
+                df_crossover_eth = df_crossover_eth.sort_values(by='timestamp_UTC')
 
-df_crossover_eth_analysis['long_ema_var'] = long_ema
-df_crossover_eth_analysis['short_ema_var'] = short_ema
-df_crossover_eth_analysis['signal_var'] = signal
+                df_crossover_eth_row1 = df_crossover_eth.head(1)
+                df_crossover_eth_row1 = df_crossover_eth_row1[(df_crossover_eth_row1['buy'] == True)]
+                df_crossover_eth_row2 = df_crossover_eth.tail(1)
+                df_crossover_eth_row2 = df_crossover_eth_row2[(df_crossover_eth_row2['sell'] == True)]
+                df_crossover_eth_analysis = df_crossover_eth
+                df_crossover_eth_analysis = df_crossover_eth_analysis.drop(df_crossover_eth_analysis.index[0])
+                df_crossover_eth_analysis = df_crossover_eth_analysis.drop(df_crossover_eth_analysis.index[-1])
+                df_crossover_eth_analysis = pd.concat([df_crossover_eth_row1, df_crossover_eth_row2, df_crossover_eth_analysis])
+                df_crossover_eth_analysis = df_crossover_eth_analysis.sort_values(by='timestamp_UTC')
 
-df_crossover_eth_analysis['analysis_key'] = df_crossover_eth_analysis['long_ema_var'].map(str) + '-' + df_crossover_eth_analysis['short_ema_var'].map(str) + '-' + df_crossover_eth_analysis['signal_var'].map(str) + df_crossover_eth_analysis['currency']
+                df_crossover_eth_analysis['long_ema_var'] = long_ema
+                df_crossover_eth_analysis['short_ema_var'] = short_ema
+                df_crossover_eth_analysis['signal_var'] = signal
 
-df_crossover_eth_analysis_buy = df_crossover_eth_analysis.loc[(df_crossover_eth_analysis['buy'] == True)]
+                df_crossover_eth_analysis['analysis_key'] = df_crossover_eth_analysis['long_ema_var'].map(str) + '-' + df_crossover_eth_analysis['short_ema_var'].map(str) + '-' + df_crossover_eth_analysis['signal_var'].map(str) + df_crossover_eth_analysis['currency']
 
-df_crossover_eth_analysis_buy['buy_sell_key'] = np.arange(len(df_crossover_eth_analysis_buy))
+                df_crossover_eth_analysis_buy = df_crossover_eth_analysis.loc[(df_crossover_eth_analysis['buy'] == True)]
 
-df_crossover_eth_analysis_sell = df_crossover_eth_analysis.loc[(df_crossover_eth_analysis['sell'] == True)]
+                df_crossover_eth_analysis_buy['buy_sell_key'] = np.arange(len(df_crossover_eth_analysis_buy))
 
-df_crossover_eth_analysis_sell['buy_sell_key'] = np.arange(len(df_crossover_eth_analysis_sell))
+                df_crossover_eth_analysis_sell = df_crossover_eth_analysis.loc[(df_crossover_eth_analysis['sell'] == True)]
 
-df_crossover_eth_analysis_buy_and_sell = df_crossover_eth_analysis
+                df_crossover_eth_analysis_sell['buy_sell_key'] = np.arange(len(df_crossover_eth_analysis_sell))
 
-df_crossover_eth_analysis_data = pd.merge(df_crossover_eth_analysis_buy, df_crossover_eth_analysis_sell, on='buy_sell_key', how='left')
+                df_crossover_eth_analysis_buy_and_sell = df_crossover_eth_analysis
 
-df_crossover_eth_analysis = df_crossover_eth_analysis_data[['currency_x', 'datetime_UTC_x', 'timestamp_UTC_x', 'price_USD_x', 'key_x', 'analysis_key_x', 'datetime_UTC_y', 'timestamp_UTC_y', 'price_USD_y', 'key_y']]
+                df_crossover_eth_analysis_data = pd.merge(df_crossover_eth_analysis_buy, df_crossover_eth_analysis_sell, on='buy_sell_key', how='left')
 
-df_crossover_eth_analysis = df_crossover_eth_analysis.rename(columns = {'currency_x':'currency', 'datetime_UTC_x':'datetime_UTC_buy', 'timestamp_UTC_x':'timestamp_UTC_buy', 'price_USD_x':'price_USD_buy', 'key_x':'data_key_buy', 'analysis_key_x': 'analysis_key', 'datetime_UTC_y':'datetime_UTC_sell', 'timestamp_UTC_y':'timestamp_UTC_sell', 'price_USD_y':'price_USD_sell', 'key_y':'data_key_sell'})
+                df_crossover_eth_analysis = df_crossover_eth_analysis_data[['currency_x', 'datetime_UTC_x', 'timestamp_UTC_x', 'price_USD_x', 'key_x', 'analysis_key_x', 'datetime_UTC_y', 'timestamp_UTC_y', 'price_USD_y', 'key_y']]
 
-df_crossover_eth_analysis['profit'] = df_crossover_eth_analysis['price_USD_sell'] - df_crossover_eth_analysis['price_USD_buy']
+                df_crossover_eth_analysis = df_crossover_eth_analysis.rename(columns = {'currency_x':'currency', 'datetime_UTC_x':'datetime_UTC_buy', 'timestamp_UTC_x':'timestamp_UTC_buy', 'price_USD_x':'price_USD_buy', 'key_x':'data_key_buy', 'analysis_key_x': 'analysis_key', 'datetime_UTC_y':'datetime_UTC_sell', 'timestamp_UTC_y':'timestamp_UTC_sell', 'price_USD_y':'price_USD_sell', 'key_y':'data_key_sell'})
 
-#####ada
+                df_crossover_eth_analysis['profit'] = df_crossover_eth_analysis['price_USD_sell'] - df_crossover_eth_analysis['price_USD_buy']
+                
+                #####ada
 
-df_historical_ada['long ema'] = df_historical_ada['price_USD'].ewm(span=long_ema,min_periods=0,adjust=False,ignore_na=False).mean()
-df_historical_ada['short ema'] = df_historical_ada['price_USD'].ewm(span=short_ema,min_periods=0,adjust=False,ignore_na=False).mean()
-df_historical_ada['MACD'] = (df_historical_ada['short ema'] - df_historical_ada['long ema'])
-df_historical_ada['signal'] = df_historical_ada['MACD'].ewm(span=signal,min_periods=0,adjust=False,ignore_na=False).mean()
-df_historical_ada['buy'] = (df_historical_ada['MACD'].shift(1) < df_historical_ada['signal'].shift(1)) & (df_historical_ada['MACD'] >= df_historical_ada['signal'])
-df_historical_ada['sell'] = (df_historical_ada['MACD'].shift(1) > df_historical_ada['signal'].shift(1)) & (df_historical_ada['MACD'] <= df_historical_ada['signal'])
+                df_historical_ada['long ema'] = df_historical_ada['price_USD'].ewm(span=long_ema,min_periods=0,adjust=False,ignore_na=False).mean()
+                df_historical_ada['short ema'] = df_historical_ada['price_USD'].ewm(span=short_ema,min_periods=0,adjust=False,ignore_na=False).mean()
+                df_historical_ada['MACD'] = (df_historical_ada['short ema'] - df_historical_ada['long ema'])
+                df_historical_ada['signal'] = df_historical_ada['MACD'].ewm(span=signal,min_periods=0,adjust=False,ignore_na=False).mean()
+                df_historical_ada['buy'] = (df_historical_ada['MACD'].shift(1) < df_historical_ada['signal'].shift(1)) & (df_historical_ada['MACD'] >= df_historical_ada['signal'])
+                df_historical_ada['sell'] = (df_historical_ada['MACD'].shift(1) > df_historical_ada['signal'].shift(1)) & (df_historical_ada['MACD'] <= df_historical_ada['signal'])
 
-df_historical_ada = df_historical_ada.tail((len(df_historical_ada.index)) - long_ema)
+                df_historical_ada = df_historical_ada.tail((len(df_historical_ada.index)) - long_ema)
 
-df_crossover_ada = df_historical_ada.loc[(df_historical_ada['buy'] == True) | (df_historical_ada['sell'] == True)]
+                df_crossover_ada = df_historical_ada.loc[(df_historical_ada['buy'] == True) | (df_historical_ada['sell'] == True)]
 
-df_crossover_ada = df_crossover_ada.sort_values(by='timestamp_UTC')
+                df_crossover_ada = df_crossover_ada.sort_values(by='timestamp_UTC')
 
-df_crossover_ada_row1 = df_crossover_ada.head(1)
-df_crossover_ada_row1 = df_crossover_ada_row1[(df_crossover_ada_row1['buy'] == True)]
-df_crossover_ada_row2 = df_crossover_ada.tail(1)
-df_crossover_ada_row2 = df_crossover_ada_row2[(df_crossover_ada_row2['sell'] == True)]
-df_crossover_ada_analysis = df_crossover_ada
-df_crossover_ada_analysis = df_crossover_ada_analysis.drop(df_crossover_ada_analysis.index[0])
-df_crossover_ada_analysis = df_crossover_ada_analysis.drop(df_crossover_ada_analysis.index[-1])
-df_crossover_ada_analysis = pd.concat([df_crossover_ada_row1, df_crossover_ada_row2, df_crossover_ada_analysis])
-df_crossover_ada_analysis = df_crossover_ada_analysis.sort_values(by='timestamp_UTC')
+                df_crossover_ada_row1 = df_crossover_ada.head(1)
+                df_crossover_ada_row1 = df_crossover_ada_row1[(df_crossover_ada_row1['buy'] == True)]
+                df_crossover_ada_row2 = df_crossover_ada.tail(1)
+                df_crossover_ada_row2 = df_crossover_ada_row2[(df_crossover_ada_row2['sell'] == True)]
+                df_crossover_ada_analysis = df_crossover_ada
+                df_crossover_ada_analysis = df_crossover_ada_analysis.drop(df_crossover_ada_analysis.index[0])
+                df_crossover_ada_analysis = df_crossover_ada_analysis.drop(df_crossover_ada_analysis.index[-1])
+                df_crossover_ada_analysis = pd.concat([df_crossover_ada_row1, df_crossover_ada_row2, df_crossover_ada_analysis])
+                df_crossover_ada_analysis = df_crossover_ada_analysis.sort_values(by='timestamp_UTC')
 
-df_crossover_ada_analysis['long_ema_var'] = long_ema
-df_crossover_ada_analysis['short_ema_var'] = short_ema
-df_crossover_ada_analysis['signal_var'] = signal
+                df_crossover_ada_analysis['long_ema_var'] = long_ema
+                df_crossover_ada_analysis['short_ema_var'] = short_ema
+                df_crossover_ada_analysis['signal_var'] = signal
 
-df_crossover_ada_analysis['analysis_key'] = df_crossover_ada_analysis['long_ema_var'].map(str) + '-' + df_crossover_ada_analysis['short_ema_var'].map(str) + '-' + df_crossover_ada_analysis['signal_var'].map(str) + df_crossover_ada_analysis['currency']
+                df_crossover_ada_analysis['analysis_key'] = df_crossover_ada_analysis['long_ema_var'].map(str) + '-' + df_crossover_ada_analysis['short_ema_var'].map(str) + '-' + df_crossover_ada_analysis['signal_var'].map(str) + df_crossover_ada_analysis['currency']
 
-df_crossover_ada_analysis_buy = df_crossover_ada_analysis.loc[(df_crossover_ada_analysis['buy'] == True)]
+                df_crossover_ada_analysis_buy = df_crossover_ada_analysis.loc[(df_crossover_ada_analysis['buy'] == True)]
 
-df_crossover_ada_analysis_buy['buy_sell_key'] = np.arange(len(df_crossover_ada_analysis_buy))
+                df_crossover_ada_analysis_buy['buy_sell_key'] = np.arange(len(df_crossover_ada_analysis_buy))
 
-df_crossover_ada_analysis_sell = df_crossover_ada_analysis.loc[(df_crossover_ada_analysis['sell'] == True)]
+                df_crossover_ada_analysis_sell = df_crossover_ada_analysis.loc[(df_crossover_ada_analysis['sell'] == True)]
 
-df_crossover_ada_analysis_sell['buy_sell_key'] = np.arange(len(df_crossover_ada_analysis_sell))
+                df_crossover_ada_analysis_sell['buy_sell_key'] = np.arange(len(df_crossover_ada_analysis_sell))
 
-df_crossover_ada_analysis_buy_and_sell = df_crossover_ada_analysis
+                df_crossover_ada_analysis_buy_and_sell = df_crossover_ada_analysis
 
-df_crossover_ada_analysis_data = pd.merge(df_crossover_ada_analysis_buy, df_crossover_ada_analysis_sell, on='buy_sell_key', how='left')
+                df_crossover_ada_analysis_data = pd.merge(df_crossover_ada_analysis_buy, df_crossover_ada_analysis_sell, on='buy_sell_key', how='left')
 
-df_crossover_ada_analysis = df_crossover_ada_analysis_data[['currency_x', 'datetime_UTC_x', 'timestamp_UTC_x', 'price_USD_x', 'key_x', 'analysis_key_x', 'datetime_UTC_y', 'timestamp_UTC_y', 'price_USD_y', 'key_y']]
+                df_crossover_ada_analysis = df_crossover_ada_analysis_data[['currency_x', 'datetime_UTC_x', 'timestamp_UTC_x', 'price_USD_x', 'key_x', 'analysis_key_x', 'datetime_UTC_y', 'timestamp_UTC_y', 'price_USD_y', 'key_y']]
 
-df_crossover_ada_analysis = df_crossover_ada_analysis.rename(columns = {'currency_x':'currency', 'datetime_UTC_x':'datetime_UTC_buy', 'timestamp_UTC_x':'timestamp_UTC_buy', 'price_USD_x':'price_USD_buy', 'key_x':'data_key_buy', 'analysis_key_x': 'analysis_key', 'datetime_UTC_y':'datetime_UTC_sell', 'timestamp_UTC_y':'timestamp_UTC_sell', 'price_USD_y':'price_USD_sell', 'key_y':'data_key_sell'})
+                df_crossover_ada_analysis = df_crossover_ada_analysis.rename(columns = {'currency_x':'currency', 'datetime_UTC_x':'datetime_UTC_buy', 'timestamp_UTC_x':'timestamp_UTC_buy', 'price_USD_x':'price_USD_buy', 'key_x':'data_key_buy', 'analysis_key_x': 'analysis_key', 'datetime_UTC_y':'datetime_UTC_sell', 'timestamp_UTC_y':'timestamp_UTC_sell', 'price_USD_y':'price_USD_sell', 'key_y':'data_key_sell'})
 
-df_crossover_ada_analysis['profit'] = df_crossover_ada_analysis['price_USD_sell'] - df_crossover_ada_analysis['price_USD_buy']
+                df_crossover_ada_analysis['profit'] = df_crossover_ada_analysis['price_USD_sell'] - df_crossover_ada_analysis['price_USD_buy']
+                """
 
-####
+                ####
 
-df_analysis_master_data = pd.concat([df_crossover_btc_analysis, df_crossover_eth_analysis, df_crossover_ada_analysis])
+                df_analysis_master_data = pd.concat([df_crossover_btc_analysis])
 
-df_analysis_master_data['analysis_key_detail'] = df_analysis_master_data['analysis_key'].map(str) + '-' + df_analysis_master_data['timestamp_UTC_buy'].map(str) + '-' + df_analysis_master_data['timestamp_UTC_sell'].map(str)
+                df_analysis_master_data['analysis_key_detail'] = df_analysis_master_data['analysis_key'].map(str) + '-' + df_analysis_master_data['timestamp_UTC_buy'].map(str) + '-' + df_analysis_master_data['timestamp_UTC_sell'].map(str)
 
-df_analysis_master_data.to_csv('df_analysis_master_data.csv', index=False)
+                df_csv = pd.read_csv('blank1.csv')
+                df_csv = df_csv.rename(columns={1: 'currency', 2: 'datetime_UTC_buy', 3: 'timestamp_UTC_buy', 4: 'price_USD_buy', 5: 'data_key_buy', 6: 'analysis_key', 7: 'datetime_UTC_sell', 8: 'timestamp_UTC_sell', 9: 'price_USD_sell', 10: 'data_key_sell', 11: 'profit', 12:'analysis_key_detail'})
+                df_csv = pd.concat([df_analysis_master_data, df_csv])
+                #df_csv = df_csv.drop_duplicates(subset=df_csv.columns.difference(['analysis_key_detail']))
+                df_csv.to_csv('blank1.csv', index=False)
+                df_csv = pd.read_csv('blank1.csv')
+                df_csv = df_csv.rename(columns={1: 'currency', 2: 'datetime_UTC_buy', 3: 'timestamp_UTC_buy', 4: 'price_USD_buy',5: 'data_key_buy', 6: 'analysis_key', 7: 'datetime_UTC_sell', 8: 'timestamp_UTC_sell', 9: 'price_USD_sell', 10: 'data_key_sell', 11: 'profit', 12: 'analysis_key_detail'})
+                #df_csv = df_csv.drop_duplicates(subset=df_csv.columns.difference(['analysis_key_detail']))
+                df_csv.to_csv('blank1.csv', index=False)
+            except:
+                pass
 
-
-
+df_csv = pd.read_csv('blank1.csv')
+df_csv = df_csv.rename(columns={1: 'currency', 2: 'datetime_UTC_buy', 3: 'timestamp_UTC_buy', 4: 'price_USD_buy',5: 'data_key_buy', 6: 'analysis_key', 7: 'datetime_UTC_sell', 8: 'timestamp_UTC_sell',9: 'price_USD_sell', 10: 'data_key_sell', 11: 'profit', 12: 'analysis_key_detail'})
+df_csv = df_csv.drop_duplicates(subset=df_csv.columns.difference(['analysis_key_detail']))
+df_csv.to_csv('blank1.csv', index=False)
